@@ -1,0 +1,65 @@
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+
+public class Sales {
+    public static void main(String[] args) {
+        try {
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new File("sales.xml"));
+            Element root = doc.getDocumentElement();
+            
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Ingrese el porcentaje (5% - 15%): ");
+            double porcentaje = Double.parseDouble(reader.readLine());
+
+            if (porcentaje < 5 || porcentaje > 15) {
+                System.out.println("Porcentaje fuera del rango.");
+                return;
+            }
+            
+            System.out.print("Ingrese el nombre del departamento: ");
+            String departamento = reader.readLine();
+            
+            NodeList salesList = root.getElementsByTagName("sale_record");
+
+            for (int i = 0; i < salesList.getLength(); i++) {
+                Element saleRecord = (Element) salesList.item(i);
+
+
+                Element departmentElement = (Element) saleRecord.getElementsByTagName("department").item(0);
+
+
+                if (departmentElement.getTextContent().equals(departamento)) {
+
+                    Element salesElement = (Element) saleRecord.getElementsByTagName("sales").item(0);
+
+
+                    double ventas = Double.parseDouble(salesElement.getTextContent());
+
+
+                    double nuevasVentas = ventas * (1 + porcentaje / 100);
+
+
+                    salesElement.setTextContent(String.format("%.2f", nuevasVentas));
+                }
+            }
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File("new_sales.xml"));
+            transformer.transform(source, result);
+
+            System.out.println("Documento generado con éxito.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
